@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../presentation/pages/home/homePage.dart';
-import '../../presentation/pages/auth/loginPage.dart';
+import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/cadastroPage.dart';
 import '../../presentation/pages/inicial/inicialPage.dart';
 import '../../presentation/pages/inicial/favoritos_page.dart';
