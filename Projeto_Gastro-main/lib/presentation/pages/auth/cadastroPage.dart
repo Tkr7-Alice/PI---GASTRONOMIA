@@ -61,7 +61,7 @@ class _CadastroPageState extends State<CadastroPage> {
             // 🌅 FUNDO
             Positioned.fill(
               child: Opacity(
-                opacity: 0.5,
+                opacity: 0.6,
                 child: Image.asset(
                   'assets/imagens/fundo_icons.png',
                   fit: BoxFit.cover,
@@ -123,6 +123,14 @@ class _CadastroPageState extends State<CadastroPage> {
           key: _formKey,
           child: Column(
             children: [
+               // BOTÃO VOLTAR
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
               Image.asset('assets/imagens/senac.png', height: 110),
 
               const SizedBox(height: 20),
