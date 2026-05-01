@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../providers/auth_provider.dart';
+import 'dart:ui';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -62,13 +63,25 @@ class _LoginPageState extends State<LoginPage> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF4F6F8),
       body: SafeArea(
         child: Stack(
           children: [
-            // Imagem alinhada na base com largura total
+           // IMAGEM DE FUNDO GLOBAL
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.6,
+                child: Image.asset(
+                  'assets/imagens/fundo_icons.png',
+                  fit: BoxFit.cover,                       
+                ),
+              ),
+            ),
+            
+
+            //  🔵 Ondas do rodapé \\ Imagem alinhada na base com largura total 
             Opacity(
-              opacity: 0.3, // Opacidade levemente maior para destacar as ondas na base
+              opacity: 0.7,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Image.asset(
@@ -78,7 +91,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            
             Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -93,9 +105,9 @@ class _LoginPageState extends State<LoginPage> {
                       const Text(
                         "© 2026 Senac - Todos os direitos reservados",
                         style: TextStyle(
-                          color: AppColors.textTertiary,
+                          color: Color(0xFF004C94),
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -112,16 +124,16 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildLoginCard(AuthProvider authProvider) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xCCFFFFFF),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 40,
-            offset: const Offset(0, 15),
+            offset: const Offset(0, 25),
           ),
         ],
-        border: Border.all(color: const Color(0xFFF3F4F6)),
+        border: Border.all(color: const Color(0xFFF0EDED)),
       ),
       child: Column(
         children: [
@@ -196,12 +208,12 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {Navigator.pushNamed(context, AppRoutes.forgotPassword);},
                           child: const Text(
                             "Esqueceu a senha?",
                             style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 13),
                           ),
-                        ),
+                        ),                        
                       ],
                     ),
                   ),
@@ -211,13 +223,13 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFF3F4F6)),
+
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Não tem uma conta? ", style: TextStyle(color: AppColors.textSecondary)),
+                const Text("Não tem uma conta? ", style: TextStyle(color: Color(0xFF6B6B6B))),
                 GestureDetector(
                   onTap: () => Navigator.pushNamed(context, AppRoutes.cadastro),
                   child: const Text(
@@ -246,7 +258,7 @@ class _LoginPageState extends State<LoginPage> {
           child: ElevatedButton(
             onPressed: authProvider.isLoading ? null : _login,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
+              backgroundColor: const Color(0xFF004C94),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

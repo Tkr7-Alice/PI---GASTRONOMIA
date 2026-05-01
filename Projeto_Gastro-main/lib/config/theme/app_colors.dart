@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // 🔵 Primária (Azul SENAC)
-  static const Color primary = Color(0xFF003A8F);
-  static const Color primaryLight = Color(0xFF1A5ED6);
-  static const Color primaryDark = Color(0xFF002C6B);
+  static const Color primary = Color(0xFF004C94);
+  static const Color primaryLight = Color(0xFF1A7FCC);
+  static const Color primaryDark = Color(0xFF003355);
 
   // 🟠 Secundária (Laranja SENAC)
   static const Color secondary = Color(0xFFF7941D);
