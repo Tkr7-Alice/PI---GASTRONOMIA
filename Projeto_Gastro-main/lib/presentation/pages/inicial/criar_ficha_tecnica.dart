@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../models/ingrediente.dart';
+import '../widgets/ingrediente_dialog.dart';
 
 class CriarFichaTecnica extends StatefulWidget {
   const CriarFichaTecnica({super.key});
@@ -17,7 +19,7 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
   final _porcoesController = TextEditingController();
   final _modoPreparoController = TextEditingController();
 
-  List<Map<String, dynamic>> ingredientes = [];
+  List<Ingrediente> ingredientes = [];
 
   // 🔒 SANITIZAÇÃO
   String sanitize(String input) {
@@ -35,8 +37,7 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
     return int.tryParse(input) ?? 0;
   }
 
-  double get custoTotal =>
-      ingredientes.fold(0.0, (sum, item) => sum + item['preco']);
+  double get custoTotal => ingredientes.fold(0.0, (sum, item) => sum + item.custoTotal);
 
   double get custoPorPorcao {
     final p = parseInt(_porcoesController.text);
@@ -45,49 +46,14 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
   }
 
   void _addIngrediente() {
-    final nome = TextEditingController();
-    final qtd = TextEditingController();
-    final preco = TextEditingController();
-
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Adicionar Ingrediente"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _input("Nome", nome),
-            _input("Quantidade", qtd),
-            _input("Preço (R\$)", preco, isNumber: true),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nome.text.isNotEmpty &&
-                  qtd.text.isNotEmpty &&
-                  preco.text.isNotEmpty) {
-                setState(() {
-                  ingredientes.add({
-                    "nome": sanitize(nome.text),
-                    "quantidade": sanitize(qtd.text),
-                    "preco": parseDouble(preco.text),
-                  });
-                });
-                Navigator.pop(context);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text("Adicionar"),
-          )
-        ],
+      builder: (_) => IngredienteDialog(
+        onAdd: (novoIngrediente) {
+          setState(() {
+            ingredientes.add(novoIngrediente);
+          });
+        },
       ),
     );
   }
@@ -305,14 +271,13 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
         ElevatedButton.icon(
           onPressed: _addIngrediente,
           icon: const Icon(Icons.add),
-          label: const Text("Adicionar"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-          ),
+          label: const Text("Adicionar Ingrediente"),
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
         ),
         const SizedBox(height: 10),
-
-        ...ingredientes.map((e) => Container(
+        
+        // Listagem atualizada com detalhes técnicos
+        ...ingredientes.map((item) => Container(
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -321,10 +286,22 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: Text(e['nome'])),
-                  Text("R\$ ${e['preco'].toStringAsFixed(2)}"),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text("${item.quantidade} ${item.unidade} | FC: ${item.fatorCorrecao}", 
+                             style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  Text("R\$ ${item.custoTotal.toStringAsFixed(2)}"),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                    onPressed: () => setState(() => ingredientes.remove(item)),
+                  ),
                 ],
               ),
             )),
