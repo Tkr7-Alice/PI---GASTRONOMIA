@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/theme/app_colors.dart';
 
 class CriarFichaTecnica extends StatefulWidget {
   const CriarFichaTecnica({super.key});
@@ -9,535 +10,397 @@ class CriarFichaTecnica extends StatefulWidget {
 
 class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
   final _formKey = GlobalKey<FormState>();
+
   final _nomeController = TextEditingController();
   final _categoriaController = TextEditingController();
   final _tempoController = TextEditingController();
   final _porcoesController = TextEditingController();
-  final _modoPreparo = TextEditingController();
-  final _armazenamento = TextEditingController();
-  final _apresentacao = TextEditingController();
-
-  String nivelDificuldade = 'Fácil';
-  final List<String> niveisDisponiveis = ['Fácil', 'Médio', 'Avançado', 'Expert'];
+  final _modoPreparoController = TextEditingController();
 
   List<Map<String, dynamic>> ingredientes = [];
-  List<String> tecnicasAplicadas = [];
 
-  void _adicionarIngrediente() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final nomeCtrl = TextEditingController();
-        final qtdCtrl = TextEditingController();
-        final precoCtrl = TextEditingController();
-
-        return AlertDialog(
-          title: const Text('Adicionar Ingrediente'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do ingrediente',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: qtdCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Quantidade (ex: 200 g)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: precoCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Preço (R\$)',
-                  border: OutlineInputBorder(),
-                  prefixText: 'R\$ ',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C2998),
-              ),
-              onPressed: () {
-                if (nomeCtrl.text.isNotEmpty && 
-                    qtdCtrl.text.isNotEmpty && 
-                    precoCtrl.text.isNotEmpty) {
-                  setState(() {
-                    ingredientes.add({
-                      'nome': nomeCtrl.text,
-                      'quantidade': qtdCtrl.text,
-                      'preco': double.tryParse(precoCtrl.text) ?? 0.0,
-                    });
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Adicionar', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
+  // 🔒 SANITIZAÇÃO
+  String sanitize(String input) {
+    return input
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r'[^\w\s@.,\-]'), '');
   }
 
-  void _adicionarTecnica() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final tecnicaCtrl = TextEditingController();
-        return AlertDialog(
-          title: const Text('Adicionar Técnica'),
-          content: TextField(
-            controller: tecnicaCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Nome da técnica',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C2998),
-              ),
-              onPressed: () {
-                if (tecnicaCtrl.text.isNotEmpty) {
-                  setState(() {
-                    tecnicasAplicadas.add(tecnicaCtrl.text);
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Adicionar', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
+  double parseDouble(String input) {
+    return double.tryParse(input.replaceAll(',', '.')) ?? 0;
   }
 
-  double get custoTotal {
-    return ingredientes.fold(0.0, (sum, item) => sum + (item['preco'] as double));
+  int parseInt(String input) {
+    return int.tryParse(input) ?? 0;
   }
+
+  double get custoTotal =>
+      ingredientes.fold(0.0, (sum, item) => sum + item['preco']);
 
   double get custoPorPorcao {
-    final porcoes = int.tryParse(_porcoesController.text) ?? 1;
-    return custoTotal / porcoes;
+    final p = parseInt(_porcoesController.text);
+    if (p == 0) return 0;
+    return custoTotal / p;
+  }
+
+  void _addIngrediente() {
+    final nome = TextEditingController();
+    final qtd = TextEditingController();
+    final preco = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Adicionar Ingrediente"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _input("Nome", nome),
+            _input("Quantidade", qtd),
+            _input("Preço (R\$)", preco, isNumber: true),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nome.text.isNotEmpty &&
+                  qtd.text.isNotEmpty &&
+                  preco.text.isNotEmpty) {
+                setState(() {
+                  ingredientes.add({
+                    "nome": sanitize(nome.text),
+                    "quantidade": sanitize(qtd.text),
+                    "preco": parseDouble(preco.text),
+                  });
+                });
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text("Adicionar"),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final payload = {
+      "nome": sanitize(_nomeController.text),
+      "categoria": sanitize(_categoriaController.text),
+      "tempo": parseInt(_tempoController.text),
+      "porcoes": parseInt(_porcoesController.text),
+      "modo_preparo": sanitize(_modoPreparoController.text),
+      "ingredientes": ingredientes,
+      "custo_total": custoTotal,
+      "custo_por_porcao": custoPorPorcao,
+    };
+
+    debugPrint(payload.toString());
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Pronto para API 🚀")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    final isTablet = width >= 600 && width < 1024;
+    final isDesktop = width >= 1024;
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
+      backgroundColor: AppColors.background,
+
+      // 🔥 HEADER PROFISSIONAL
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            // Header
             Container(
-              color: const Color(0xFF6C2998),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Text(
-                    'Criar Ficha Técnica',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Form
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Imagem
-                      Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            // TODO: Implementar seleção de imagem
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 180,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFB47AFF), width: 2),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
-                                const SizedBox(height: 8),
-                                Text('Adicionar foto', style: TextStyle(color: Colors.grey[600])),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Nome da Receita
-                      TextFormField(
-                        controller: _nomeController,
-                        decoration: InputDecoration(
-                          labelText: 'Nome da Receita',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                          ),
-                        ),
-                        validator: (value) => value?.isEmpty ?? true ? 'Campo obrigatório' : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Categoria
-                      TextFormField(
-                        controller: _categoriaController,
-                        decoration: InputDecoration(
-                          labelText: 'Categoria (ex: Confeitaria Fina)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Nível de Dificuldade
-                      const Text('Nível de Dificuldade', style: TextStyle(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: niveisDisponiveis.map((nivel) {
-                          return ChoiceChip(
-                            label: Text(nivel),
-                            selected: nivelDificuldade == nivel,
-                            onSelected: (selected) {
-                              setState(() {
-                                nivelDificuldade = nivel;
-                              });
-                            },
-                            selectedColor: const Color(0xFFB47AFF),
-                            labelStyle: TextStyle(
-                              color: nivelDificuldade == nivel ? Colors.white : Colors.black,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Tempo e Porções
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _tempoController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Tempo (min)',
-                                prefixIcon: const Icon(Icons.access_time, color: Color(0xFFB47AFF)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _porcoesController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Porções',
-                                prefixIcon: const Icon(Icons.people, color: Color(0xFFB47AFF)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Técnicas Aplicadas
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Técnicas Aplicadas', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                          IconButton(
-                            onPressed: _adicionarTecnica,
-                            icon: const Icon(Icons.add_circle, color: Color(0xFF6C2998)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (tecnicasAplicadas.isEmpty)
-                        const Text('Nenhuma técnica adicionada', style: TextStyle(color: Colors.grey))
-                      else
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: tecnicasAplicadas.map((tecnica) {
-                            return Chip(
-                              label: Text(tecnica),
-                              backgroundColor: const Color(0xFFF8F6FA),
-                              side: const BorderSide(color: Color(0xFFB47AFF)),
-                              deleteIcon: const Icon(Icons.close, size: 18),
-                              onDeleted: () {
-                                setState(() {
-                                  tecnicasAplicadas.remove(tecnica);
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                      const SizedBox(height: 20),
-
-                      // Ingredientes
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Ingredientes', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                          IconButton(
-                            onPressed: _adicionarIngrediente,
-                            icon: const Icon(Icons.add_circle, color: Color(0xFF6C2998)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (ingredientes.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFB47AFF)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Nenhum ingrediente adicionado',
-                            style: TextStyle(color: Colors.grey),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      else
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFB47AFF)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              ...ingredientes.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final ingrediente = entry.value;
-                                return ListTile(
-                                  title: Text('${index + 1}. ${ingrediente['nome']}'),
-                                  subtitle: Text(ingrediente['quantidade']),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'R\$ ${ingrediente['preco'].toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: Color(0xFFB47AFF),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () {
-                                          setState(() {
-                                            ingredientes.removeAt(index);
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ],
-                          ),
-                        ),
-                      if (ingredientes.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Custo Total:', style: TextStyle(fontWeight: FontWeight.w600)),
-                            Text(
-                              'R\$ ${custoTotal.toStringAsFixed(2)}',
-                              style: const TextStyle(color: Color(0xFFB47AFF), fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Custo por Porção:', style: TextStyle(fontWeight: FontWeight.w600)),
-                            Text(
-                              'R\$ ${custoPorPorcao.toStringAsFixed(2)}',
-                              style: const TextStyle(color: Color(0xFFB47AFF), fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-
-                      // Modo de Preparo
-                      const Text('Modo de Preparo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _modoPreparo,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Descreva o modo de preparo...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFB47AFF)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Armazenamento
-                      const Text('Armazenamento e Validade', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _armazenamento,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          hintText: 'Ex: 3 dias refrigerado, 60 dias congelado',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFB47AFF)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Apresentação
-                      const Text('Sugestões de Apresentação', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _apresentacao,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          hintText: 'Ex: Finalizar com pó de ouro e flores comestíveis',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFB47AFF)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFF6C2998), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Botão Salvar
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C2998),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // TODO: Salvar ficha técnica
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Ficha técnica salva com sucesso!'),
-                                  backgroundColor: Color(0xFF6C2998),
-                                ),
-                              );
-                              Navigator.pop(context);
-                            }
-                          },
-                          child: const Text(
-                            'Salvar Ficha Técnica',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF005CA9),   // 🔵 azul forte
+                    Color(0xFF007BFF),   // 🔵 azul médio
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
             ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.35),
+                    Colors.black.withValues(alpha: 0.1),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            SafeArea(
+              bottom: false,
+              child: Container(
+                height: double.infinity,
+                alignment: Alignment.center,
+                child: Stack(
+                  children: [
+                    // 🔙 BOTÃO VOLTAR
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      ),
+                    ),
+
+                    
+                    const Center(
+                      child: Text(
+                        "Nova Receita",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+
+                    // ✅ BOTÃO CONFIRMAR
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: _submit,
+                        icon: CircleAvatar(
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          child: const Icon(Icons.check, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+
+      // 🔥 BODY PROFISSIONAL
+      body: Stack(
+        children: [
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Opacity(
+              opacity: 0.65,
+              child: Image.asset(
+                'assets/imagens/senac_fundo.png',
+                fit: BoxFit.fitWidth,
+              ),
+            ),
+          ),
+
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktop
+                      ? 1000
+                      : isTablet
+                          ? 800
+                          : double.infinity,
+                ),
+                child: _card(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _foto(),
+            const SizedBox(height: 20),
+
+            _input("Nome", _nomeController),
+            _input("Categoria", _categoriaController),
+            _input("Tempo (min)", _tempoController, isNumber: true),
+            _input("Porções", _porcoesController, isNumber: true),
+
+            _section("Ingredientes"),
+            _ingredientes(),
+
+            _section("Modo de preparo"),
+            _input("Descreva...", _modoPreparoController, maxLines: 4),
+
+            const SizedBox(height: 20),
+
+            _button(),
           ],
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _categoriaController.dispose();
-    _tempoController.dispose();
-    _porcoesController.dispose();
-    _modoPreparo.dispose();
-    _armazenamento.dispose();
-    _apresentacao.dispose();
-    super.dispose();
+  Widget _foto() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_a_photo, size: 40),
+            SizedBox(height: 8),
+            Text("Adicionar foto da receita"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _ingredientes() {
+    return Column(
+      children: [
+        ElevatedButton.icon(
+          onPressed: _addIngrediente,
+          icon: const Icon(Icons.add),
+          label: const Text("Adicionar"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.secondary,
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        ...ingredientes.map((e) => Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: Text(e['nome'])),
+                  Text("R\$ ${e['preco'].toStringAsFixed(2)}"),
+                ],
+              ),
+            )),
+      ],
+    );
+  }
+
+  Widget _button() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text(
+          "Salvar Receita",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _section(String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppColors.textPrimary)),
+        const Divider(),
+      ],
+    );
+  }
+
+  Widget _input(String label, TextEditingController controller,
+      {bool isNumber = false, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        maxLines: maxLines,
+        validator: (v) => v == null || v.isEmpty ? "Obrigatório" : null,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: const Color(0xFFF9FAFB),
+
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),     
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(
+              color: AppColors.primary,
+              width: 2,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

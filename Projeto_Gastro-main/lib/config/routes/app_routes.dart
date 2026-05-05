@@ -8,6 +8,7 @@ import '../../presentation/pages/perfil/perfilPage.dart';
 import '../../presentation/pages/configuracoes/configuracoesPage.dart';
 import '../../presentation/pages/auth/forgotPasswordPage.dart';
 import '../../presentation/pages/auth/forgotPasswordSucess.dart';
+import '../../presentation/pages/inicial/criar_ficha_tecnica.dart';
 
 class AppRoutes {
   static const String home = '/';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String configuracoes = '/configuracoes';
   static const String forgotPassword = '/forgot-password'; 
   static const String forgotPasswordSuccess = '/forgot-password-success';
+  static const String criarFichaTecnica = '/criar-ficha';
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       home: (context) => const Homepage(),
@@ -30,6 +32,7 @@ class AppRoutes {
       configuracoes: (context) => const ConfiguracoesPage(),
       forgotPassword: (context) => const ForgotPasswordPage(),
       forgotPasswordSuccess: (context) => const ForgotPasswordSuccessPage(),
+      criarFichaTecnica: (context) => const CriarFichaTecnica(),
     };
   }
 }

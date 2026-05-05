@@ -45,6 +45,7 @@ flutter:
     - assets/imagens/senac.png
     - assets/imagens/senac_fundo.png
     - assets/imagens/fundo_icons.png
+    - assets/imagens/senac_topo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../providers/auth_provider.dart';
-import 'dart:ui';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
