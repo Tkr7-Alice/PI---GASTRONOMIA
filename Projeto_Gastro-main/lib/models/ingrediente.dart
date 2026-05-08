@@ -1,9 +1,9 @@
 class Ingrediente {
   final String nome;
   final double quantidade;
-  final String unidade; // ex: 'g', 'kg', 'ml', 'un'
-  final double precoUnitario; // Preço do kg/litro/unidade
-  final double fatorCorrecao; // FC (ex: 1.0 para sem perda, 1.25 para limpeza)
+  final String unidade;
+  final double precoUnitario;
+  final double fatorCorrecao;
 
   Ingrediente({
     required this.nome,
@@ -13,6 +13,30 @@ class Ingrediente {
     this.fatorCorrecao = 1.0,
   });
 
-  // Cálculo: (Quantidade * Fator) * Preço Unitário
-  double get custoTotal => (quantidade * fatorCorrecao) * precoUnitario;
+  // 🔥 JSON PARA API
+  Map<String, dynamic> toJson() {
+    return {
+      "nome": nome,
+      "quantidade": quantidade,
+      "unidade": unidade,
+      "preco_unitario": precoUnitario,
+      "fator_correcao": fatorCorrecao,
+    };
+  }
+
+  // 🔥 (IMPORTANTE) CASO VENHA DO BACKEND
+  factory Ingrediente.fromJson(Map<String, dynamic> json) {
+    return Ingrediente(
+      nome: json["nome"] ?? "",
+      quantidade: (json["quantidade"] ?? 0).toDouble(),
+      unidade: json["unidade"] ?? "g",
+      precoUnitario: (json["preco_unitario"] ?? 0).toDouble(),
+      fatorCorrecao: (json["fator_correcao"] ?? 1.0).toDouble(),
+    );
+  }
+
+  // 🔥 REGRA DE NEGÓCIO (GASTRONOMIA)
+  double get quantidadeCorrigida => quantidade * fatorCorrecao;
+
+  double get custoTotal => quantidadeCorrigida * precoUnitario;
 }
