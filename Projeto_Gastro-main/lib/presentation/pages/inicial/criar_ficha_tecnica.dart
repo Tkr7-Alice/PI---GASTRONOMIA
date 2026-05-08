@@ -21,13 +21,15 @@ class _CriarFichaTecnicaState extends State<CriarFichaTecnica> {
   final _tempoController = TextEditingController();
   final _porcoesController = TextEditingController();
   final _modoPreparoController = TextEditingController();
+  final _lucroController = TextEditingController(
+    text: "300",
+  );
 
   String nivelSelecionado = "";
   bool isLoading = false;
-  File? imagemReceita;
 
+  File? imagemReceita;
   final ImagePicker _picker = ImagePicker();
-  final _lucroController = TextEditingController(text: "300");
 
   List<Ingrediente> ingredientes = [];
 
